@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
 import PostCard from '../components/PostCard';
 import { getPosts } from '../services/api';
@@ -6,6 +7,7 @@ import { AuthContext } from '../context/authContext';
 import './Home.css';
 
 const Home = () => {
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -42,9 +44,10 @@ const Home = () => {
       <div className="home-header">
         <h1>Recent Posts</h1>
         {user ? (
-          <p className="auth-message">
-            Welcome back! Create Post button will be added in Activity 9.
-          </p>
+          <button onClick={() => navigate('/posts/create')}
+          className="create-post-button">
+            Create New Post
+          </button>
         ) : (
           <p className="auth-message">
             <a href="/login">Login</a> or <a href="/register">Register</a> to create posts.
