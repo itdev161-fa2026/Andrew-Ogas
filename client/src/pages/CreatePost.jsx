@@ -1,13 +1,10 @@
-import { useState, useContext } from 'react';
-// import { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/authContext';
 import { createPost } from '../services/api';
 import PostForm from '../components/PostForm';
 import './CreatePost.css';
 
 const CreatePost = () => {
-    const { user } = useContext(AuthContext);
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);

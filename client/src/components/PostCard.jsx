@@ -1,11 +1,24 @@
 import { Link } from 'react-router-dom';
+import { getCommentsByPostId } from '../services/api';
 import './PostCard.css';
+import { useState, useEffect } from 'react';
 
 const PostCard = ({ post }) => {
     const formatDate = (dateString) => {
         const options = { year: 'numeric', month: 'long', day: 'numeric'};
         return new Date(dateString).toLocaleDateString(undefined, options);
     };
+    const [commentsCount, setCommentsCount] = useState(0);
+
+    // Fetch comments count when component mounts
+    useEffect(() => async () => {
+        try {
+            const comments = await getCommentsByPostId(post._id);
+            setCommentsCount(comments.length);
+        } catch (err) {
+            console.error('Failed to fetch comments count for post:', err);
+        }
+    }, [post._id]);
 
     return (
         <div className = "post-card">
@@ -20,12 +33,11 @@ const PostCard = ({ post }) => {
                     {post.body.substring(0, 150)}
                     {post.body.length > 150 ? "..." : ""}
                 </p>
-                {/* Tip: to insert the arrow after "Read more", you can
-                // a.) enter the unicode escape code: {"\u2192"}, or
-                // b.) on Mac: type Control + Command + Space to open the 
-                //     character picker, search for arrow, or
-                // c.) on Windows: type Windows + . to open the emoji
-                //     picker, search for arrow*/}
+                {commentsCount > 0 && (
+                    <div className="post-comments-count">
+                        ({commentsCount} {commentsCount === 1 ? 'comment)' : 'comments)'}
+                    </div>
+                )}
                 <span className="read-more">Read more →</span>
             </Link>
         </div>

@@ -3,11 +3,13 @@ import connectDatabase from './config/db.js';
 import { check, validationResult } from 'express-validator';
 import User from './models/User.js';
 import Post from './models/Post.js';
+import Comment from './models/Comment.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import auth from './middleware/auth.js';
 import cors from 'cors';
+import c from 'config';
 
 //load environment variables from .env file
 dotenv.config();
@@ -311,6 +313,196 @@ app.delete("/api/posts/:id", auth, async (req, res) => {
         if (error.kind === "ObjectId") {
             return res.status(404).json({ msg: "Post not found" });
         }
+        res.status(500).send("Server Error");
+    }
+});
+
+/**
+ * @route POST api/comments
+ * @desc Create a comment
+ */
+app.post(
+    "/api/comments",
+    [ 
+        auth, 
+        check("body", "Body is required").not().isEmpty(),
+        check("postId", "Post ID is required").not().isEmpty(),
+    ], 
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+        const { body, postId } = req.body;
+        const newComment = new Comment({
+            user: req.user.id,
+            postId,
+            body,
+        });
+
+        const comment = await newComment.save();
+        await comment.populate("user", "name");
+
+        res.json(comment);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send("Server Error");
+    }
+});
+
+/**
+* @route GET api/comments
+* @desc Get all comments
+*/
+
+app.get("/api/comments", async (req, res) => {
+    try {
+        const comments = await Comment.find()
+        .populate("user", "name")
+        .sort({ createDate: -1 });
+
+        res.json(comments);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send("Server Error");
+    }
+});
+
+/**
+* @route GET api/comments/:id
+* @desc Get single comment
+*/
+
+app.get("/api/comments/:id", async (req, res) => {
+    try {
+        const comment = await Comment.findById(req.params.id).populate("user", "name");
+        if (!comment) {
+            return res.status(404).json({ msg: "Comment not found" });
+        }
+        res.json(comment);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send("Server Error");
+    }
+});
+
+/**
+ * @route GET api/comments
+ * @desc Get comments by post ID 
+ */
+app.get("/api/comments/postId/:postId", async (req, res) => {
+    try {
+            const comments = await Comment.find({ postId: req.params.postId })
+                .populate("user", "name")
+                .sort({ createDate: 1 });
+
+        if (!comments) {
+            return( res.status(404).json({ msg: "No comments found" }) );
+        }
+        res.json(comments);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send("Server Error");
+    }
+});
+
+/**
+ * @route PUT api/comments/:id
+ * @desc Update a comment
+ */
+
+app.put(
+    "/api/comments/:id",
+    [auth,
+        check("body", "Body is required").not().isEmpty(),
+    ],
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        try {
+            const { body } = req.body;
+
+            const comment = await Comment.findById(req.params.id);
+
+            if (!comment) {
+                return res.status(404).json({ msg: "Comment not found" });
+            }
+
+            // Check if user owns the comment
+            if (comment.user.toString() !== req.user.id) {
+                return res.status(401).json({ msg: "User not authorized" });
+            }
+
+            comment.body = body;
+            comment.lastEdited = Date.now();
+
+            await comment.save();
+            await comment.populate("user", "name");
+
+            res.json(comment);
+        } catch (error) {
+            console.error(error.message);
+            if (error.kind === "ObjectId") {
+                return res.status(404).json({ msg: "Comment not found" });
+            }
+            res.status(500).send("Server Error");
+        }
+    }
+);
+
+/**
+ * @route DELETE api/comments/:id
+ * @desc Delete a comment
+ */
+
+app.delete("/api/comments/:id", auth, async (req, res) => {
+    try {
+        const comment = await Comment.findById(req.params.id);
+
+        if (!comment) {
+            return res.status(404).json({ msg: "Comment not found" });
+        }
+
+        // Check if user owns the comment
+        if (comment.user.toString() !== req.user.id) {
+            return res.status(401).json({ msg: "User not authorized" });
+        }
+
+        await Comment.findByIdAndDelete(req.params.id);
+
+        res.json({ msg: "Comment removed" });
+    } catch (error) {
+        console.error(error.message);
+        if (error.kind === "ObjectId") {
+            return res.status(404).json({ msg: "Comment not found" });
+        }
+        res.status(500).send("Server Error");
+    }
+});
+
+/**
+ * @route DELETE api/comments/postId/:postId
+ * @desc Delete comments by post ID 
+ */
+
+app.delete("/api/comments/postId/:postId", auth, async (req, res) => {
+    try {
+        const comments = await Comment.find({ postId: req.params.postId });
+        if (!comments) {
+            return res.status(404).json({ msg: "No comments found for this post" });
+        }
+        comments.forEach(async (comment) => {
+            await Comment.findByIdAndDelete(comment._id);
+        });
+
+        res.json({ msg: "Comments for the post removed" });
+    } catch (error) {
+        console.error(error.message);
         res.status(500).send("Server Error");
     }
 });
