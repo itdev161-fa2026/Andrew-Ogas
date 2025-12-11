@@ -93,3 +93,25 @@
     color: #21a1c4;
     text-decoration: underline;
 }
+
+.comments-section {
+    margin-top: 3rem;
+    border-top: 3px solid #969696;
+}
+
+.no-comments {
+    font-size: 1.5em;
+    text-align: center;
+    color: #494949;
+    font-style: italic;
+    margin: 1.5rem;
+}
+
+.expose-comments {
+    background: none;
+    border: none;
+    font-size: 1em;
+    cursor: pointer;
+    margin-left: 0em;
+    color: #333333;
+}

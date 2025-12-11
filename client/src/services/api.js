@@ -110,3 +110,58 @@ export const deletePost = async (id) => {
     throw error;
   }
 };
+
+// Create a new comment
+export const createComment = async (postId, body) => {
+  try {
+    const response = await api.post('/comments', { postId, body });
+    return response.data;
+  } catch (error) {
+    console.error('Error creating comment:', error);
+    throw error;
+  }
+};
+
+// Get comments by post ID
+export const getCommentsByPostId = async (postId) => {
+  try {
+    const response = await api.get(`/comments/postId/${postId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching comments:', error);
+    throw error;
+  }
+};
+
+// Update a comment
+export const updateComment = async (id, body) => {
+  try {
+    const response = await api.put(`/comments/${id}`, { body });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating comment:', error);
+    throw error;
+  }
+};
+
+// Delete a comment
+export const deleteComment = async (id) => {
+  try {
+    const response = await api.delete(`/comments/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting comment:', error);
+    throw error;
+  }
+};
+
+// Delete comments by post ID
+export const deleteCommentsByPostId = async (postId) => {
+  try {
+    const response = await api.delete(`/comments/postId/${postId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting comments by post ID:', error);
+    throw error;
+  }
+};

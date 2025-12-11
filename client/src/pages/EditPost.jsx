@@ -32,6 +32,7 @@ const EditPost = () => {
                 setLoading(false);
             } catch (err) {
                 setError('Failed to load post. It may not exist or the server is down.');
+                console.error(err);
                 setLoading(false);
             }
         };
